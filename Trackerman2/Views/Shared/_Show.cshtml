@@ -1,0 +1,28 @@
+﻿@model ShowViewModel
+
+<div class="row">
+    <div class="col-md-1" style="padding:10px;">
+        <img class="img img-responsive" src="@Html.ImageOrDefault(Model.PosterPath)" />
+    </div>
+    <div class="col-md-11">
+        <h3>@Html.ActionLink(Model.Name + " (" + Model.FirstAirDateYear + ")", "Details", "Show", new { @id = Model.ID }, null) <button data-show-id="@Model.ID" class="btn @(Model.Tracking ? "btn-info" : "btn-default") btn-sm btn-track js-track">@(Model.Tracking ? "Untrack" : "Track")</button></h3>
+        <p>@(Model.Overview != null && Model.Overview.Count() > 500 ? new string(Model.Overview.Take(500).ToArray()) + "..." : Model.Overview)</p>
+
+        @if (User.Identity.IsAuthenticated && Model.LatestEpisode != null)
+        {
+            <div class="row">
+                <div class="col-md-2" style="padding:10px;">
+                    <img class="img img-responsive" src="@Html.ImageOrDefault(Model.LatestEpisode.StillPath)" />
+                </div>
+                <div class="col-md-10">
+                    <h4>@Model.LatestEpisode.Name (@Model.LatestEpisode.AirDate) <button data-episode-id="@Model.LatestEpisode.ID" class="btn @(Model.LatestEpisode.Watched ? "btn-info" : "btn-default") btn-xs btn-track js-latest-episode-watch">@(Model.LatestEpisode.Watched ? "Watched!" : "Watched?")</button></h4>
+                    <p>@Model.LatestEpisode.Overview</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <h4 style="color:grey;"><b><i>You are up to date on this show.</i></b></h4>
+        }
+    </div>
+</div>

@@ -1,0 +1,153 @@
+﻿@model ShowViewModel
+
+<div class="row">
+    <div class="col-md-2" style="padding:10px;">
+        <img class="img img-responsive" src="@Html.ImageOrDefault(Model.PosterPath)" />
+    </div>
+    <div class="col-md-10">
+        <h3>@Model.Name (@Model.FirstAirDateYear) <button data-show-id="@Model.ID" class="btn @(Model.Tracking ? "btn-info" : "btn-default") btn-sm btn-track js-track">@(Model.Tracking ? "Untrack" : "Track")</button></h3>
+        <p>@Model.Overview</p>
+
+        @if (Model.LatestEpisode != null)
+        {
+            <div class="row">
+                <div class="col-md-2" style="padding:10px;">
+                    <img class="img img-responsive" src="@Html.ImageOrDefault(Model.LatestEpisode.StillPath)" />
+                </div>
+                <div class="col-md-10">
+                    <h4>@Model.LatestEpisode.Name (@Model.LatestEpisode.AirDate) <button data-episode-id="@Model.LatestEpisode.ID" class="btn @(Model.LatestEpisode.Watched ? "btn-info" : "btn-default") btn-xs btn-track js-episode-watch">@(Model.LatestEpisode.Watched ? "Watched!" : "Watched?")</button></h4>
+                    <p>@Model.LatestEpisode.Overview</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <h4 style="color:grey;"><b><i>You are up to date on this show.</i></b></h4>
+        }
+    </div>
+</div>
+
+<div>
+    <ul class="nav nav-tabs" role="tablist">
+        @foreach (var season in Model.Seasons)
+        {
+            <li role="presentation" class="season"><a href="#@season.SeasonNumber" aria-controls="#@season.SeasonNumber" role="tab" data-toggle="tab">@(season.SeasonNumber != 0 ? season.SeasonNumber.ToString() : "Specials")</a></li>
+        }
+    </ul>
+
+    <div class="tab-content">
+        @foreach (var season in Model.Seasons)
+        {
+            <div role="tabpanel" class="tab-pane" id="@season.SeasonNumber">
+                <h4>Season @(season.SeasonNumber != 0 ? season.SeasonNumber.ToString() : "Specials") <button data-season-id="@season.ID" class="btn @(season.Watched ? "btn-info" : "btn-default") btn-xs btn-track js-season-watch">@(season.Watched ? "Watched!" : "Watched?")</button></h4>
+                <hr />
+
+                @foreach (var episode in season.Episodes)
+                {
+                    <div class="row">
+                        <div class="col-md-2" style="padding:10px;">
+                            <img class="img img-responsive" src="@Html.ImageOrDefault(episode.StillPath)" />
+                        </div>
+                        <div class="col-md-10">
+                            <h4>@episode.Name (@episode.AirDate) <button data-episode-id="@episode.ID" class="btn @(episode.Watched ? "btn-info" : "btn-default") btn-xs btn-track js-episode-watch">@(episode.Watched ? "Watched!" : "Watched?")</button></h4>
+                            <p>@episode.Overview</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $(".season").first().addClass("active");
+            $(".tab-pane").first().addClass("active");
+        })
+
+        $(document).ready(function () {
+            $(".js-track").on("click", toggleTracking);
+            $(".js-season-watch").on("click", toggleSeasonWatched);
+            $(".js-episode-watch").on("click", toggleEpisodeWatched);
+        });
+
+        var toggleTracking = function (e) {
+            button = $(e.target);
+            var showID = button.attr("data-show-id");
+
+            if (button.hasClass("btn-default")) {
+                $.post("/api/show/TrackShow/", "=" + showID)
+                    .done(function () {
+                        button.toggleClass("btn-default").toggleClass("btn-info").text(button.hasClass("btn-default") ? "Track" : "Untrack");
+                    })
+                    .fail(function () {
+                        alert("There was a problem tracking this show, please try again.");
+                    });
+            }
+            else {
+                $.ajax({ url: "/api/show/" + showID, method: "DELETE" })
+                    .done(function () {
+                        button.toggleClass("btn-info").toggleClass("btn-default").text(button.hasClass("btn-default") ? "Track" : "Untrack");
+                    })
+                    .fail(function () {
+                        alert("There was a problem untracking this show, please try again.");
+                    });
+            }
+        };
+
+        var toggleSeasonWatched = function (e) {
+            button = $(e.target);
+            var seasonID = button.attr("data-season-id");
+
+            if (button.hasClass("btn-default")) {
+                $.post("/api/season/WatchSeason/", "=" + seasonID)
+                    .done(function () {
+                        button.toggleClass("btn-default").toggleClass("btn-info").text(button.hasClass("btn-default") ? "Watched?" : "Watched!");
+                        $("[data-episode-id]", button.parents(".tab-pane")).removeClass("btn-default").addClass("btn-info").text("Watched!");
+                    })
+                    .fail(function () {
+                        alert("There was a problem tracking this show, please try again.");
+                    });
+            }
+            else {
+                $.ajax({ url: "/api/season/" + seasonID, method: "DELETE" })
+                    .done(function () {
+                        button.toggleClass("btn-info").toggleClass("btn-default").text(button.hasClass("btn-default") ? "Watched?" : "Watched!");
+                        $("[data-episode-id]", button.parents(".tab-pane")).removeClass("btn-info").addClass("btn-default").tex99t("Watched?");
+                    })
+                    .fail(function () {
+                        alert("There was a problem untracking this show, please try again.");
+                    });
+            }
+        };
+
+        var toggleEpisodeWatched = function (e) {
+            button = $(e.target);
+            var episodeID = button.attr("data-episode-id");
+
+            if (button.hasClass("btn-default")) {
+                $.post("/api/episode/WatchEpisode/", "=" + episodeID)
+                    .done(function () {
+                        button.toggleClass("btn-default").toggleClass("btn-info").text(button.hasClass("btn-default") ? "Watched?" : "Watched!");
+                        if ($("[data-episode-id]", button.parents(".tab-pane")).not(".btn-info").length == 0)
+                            button.parents(".tab-pane").find("*[data-season-id]").removeClass("btn-default").addClass("btn-info").text(button.hasClass("btn-default") ? "Watched?" : "Watched!");
+                    })
+                    .fail(function () {
+                        alert("There was a problem tracking this show, please try again.");
+                    });
+            }
+            else {
+                $.ajax({ url: "/api/episode/" + episodeID, method: "DELETE" })
+                    .done(function () {
+                        button.toggleClass("btn-info").toggleClass("btn-default").text(button.hasClass("btn-default") ? "Watched?" : "Watched!");
+                        button.parents(".tab-pane").find("*[data-season-id]").removeClass("btn-info").addClass("btn-default").text(button.hasClass("btn-default") ? "Watched?" : "Watched!");
+                    })
+                    .fail(function () {
+                        alert("There was a problem untracking this show, please try again.");
+                    });
+            }
+        };
+    </script>    
+}
+

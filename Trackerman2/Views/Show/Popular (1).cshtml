@@ -1,0 +1,7 @@
+﻿@model ShowIndexViewModel
+<h2>Popular</h2>
+
+@foreach(var show in Model.Shows)
+{
+    @Html.Partial("_Show", show)
+}

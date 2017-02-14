@@ -1,0 +1,42 @@
+﻿@model ShowSearchViewModel
+
+<h1>Shows</h1>
+<h2>Search results for: @Model.SearchTerm</h2>
+<hr />
+
+@foreach (var show in Model.Shows)
+{
+    @Html.Partial("_Show", show)
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $(".js-track").on("click", toggleTracking);
+        });
+       
+        var toggleTracking = function (e) {
+            button = $(e.target);
+            var showID = button.attr("data-show-id");
+
+            if (button.hasClass("btn-default")) {
+                $.post("/api/show/TrackShow/", "=" + showID)
+                    .done(function () {
+                        button.toggleClass("btn-default").toggleClass("btn-info").text(button.hasClass("btn-default") ? "Track" : "Untrack");
+                    })
+                    .fail(function () {
+                        alert("There was a problem tracking this show, please try again.");
+                    });
+            }
+            else {
+                $.ajax({ url: "/api/show/" + showID, method: "DELETE" })
+                    .done(function () {
+                        button.toggleClass("btn-info").toggleClass("btn-default").text(button.hasClass("btn-default") ? "Track" : "Untrack");
+                    })
+                    .fail(function () {
+                        alert("There was a problem untracking this show, please try again.");
+                    });
+            }
+        }   
+    </script>
+}

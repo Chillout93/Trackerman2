@@ -1,0 +1,103 @@
+﻿@model ShowIndexViewModel
+<h2>Popular</h2>
+
+@foreach(var show in Model.Shows)
+{
+    @Html.Partial("_Show", show)
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $(".season").first().addClass("active");
+            $(".tab-pane").first().addClass("active");
+        })
+
+        $(document).ready(function () {
+            $(".js-track").on("click", toggleTracking);
+            $(".js-season-watch").on("click", toggleSeasonWatched);
+            $(".js-episode-watch").on("click", toggleEpisodeWatched);
+        });
+
+        var toggleTracking = function (e) {
+            button = $(e.target);
+            var showID = button.attr("data-show-id");
+
+            if (button.hasClass("btn-default")) {
+                $.post("/api/show/TrackShow/", "=" + showID)
+                    .done(function () {
+                        button.toggleClass("btn-default").toggleClass("btn-info").text(button.hasClass("btn-default") ? "Track" : "Untrack");
+                    })
+                    .fail(function () {
+                        alert("There was a problem tracking this show, please try again.");
+                    });
+            }
+            else {
+                $.ajax({ url: "/api/show/" + showID, method: "DELETE" })
+                    .done(function () {
+                        button.toggleClass("btn-info").toggleClass("btn-default").text(button.hasClass("btn-default") ? "Track" : "Untrack");
+                    })
+                    .fail(function () {
+                        alert("There was a problem untracking this show, please try again.");
+                    });
+            }
+        };
+
+        var toggleSeasonWatched = function (e) {
+            button = $(e.target);
+            var seasonID = button.attr("data-season-id");
+
+            if (button.hasClass("btn-default")) {
+                $.post("/api/season/WatchSeason/", "=" + seasonID)
+                    .done(function () {
+                        button.toggleClass("btn-default").toggleClass("btn-info").text(button.hasClass("btn-default") ? "Watched?" : "Watched!");
+                        $("[data-episode-id]", button.parents(".tab-pane")).removeClass("btn-default").addClass("btn-info").text("Watched!");
+                        window.location.reload(true);
+                    })
+                    .fail(function () {
+                        alert("There was a problem tracking this show, please try again.");
+                    });
+            }
+            else {
+                $.ajax({ url: "/api/season/" + seasonID, method: "DELETE" })
+                    .done(function () {
+                        button.toggleClass("btn-info").toggleClass("btn-default").text(button.hasClass("btn-default") ? "Watched?" : "Watched!");
+                        $("[data-episode-id]", button.parents(".tab-pane")).removeClass("btn-info").addClass("btn-default").text("Watched?");
+                        window.location.reload(true);
+                    })
+                    .fail(function () {
+                        alert("There was a problem untracking this show, please try again.");
+                    });
+            }
+        };
+
+        var toggleEpisodeWatched = function (e) {
+            button = $(e.target);
+            var episodeID = button.attr("data-episode-id");
+
+            if (button.hasClass("btn-default")) {
+                $.post("/api/episode/WatchEpisode/", "=" + episodeID)
+                    .done(function () {
+                        button.toggleClass("btn-default").toggleClass("btn-info").text(button.hasClass("btn-default") ? "Watched?" : "Watched!");
+                        if ($("[data-episode-id]", button.parents(".tab-pane")).not(".btn-info").length == 0)
+                            button.parents(".tab-pane").find("*[data-season-id]").removeClass("btn-default").addClass("btn-info").text(button.hasClass("btn-default") ? "Watched?" : "Watched!");
+                        window.location.reload(true);
+                    })
+                    .fail(function () {
+                        alert("There was a problem tracking this show, please try again.");
+                    });
+            }
+            else {
+                $.ajax({ url: "/api/episode/" + episodeID, method: "DELETE" })
+                    .done(function () {
+                        button.toggleClass("btn-info").toggleClass("btn-default").text(button.hasClass("btn-default") ? "Watched?" : "Watched!");
+                        button.parents(".tab-pane").find("*[data-season-id]").removeClass("btn-info").addClass("btn-default").text(button.hasClass("btn-default") ? "Watched?" : "Watched!");
+                        window.location.reload(true);
+                    })
+                    .fail(function () {
+                        alert("There was a problem untracking this show, please try again.");
+                    });
+            }
+        };
+    </script>
+}
